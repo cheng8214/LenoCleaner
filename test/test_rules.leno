@@ -248,9 +248,11 @@ eq("保留: kept 计数", _int(rw[3]), 1)
 
 // 删除端**兜底**：把豁免项硬塞进 chunk（模拟"清单是清理中途才加的"）⇒ 也不能删 ✓
 Array[Array[string]] bad = [[dirs.join(wbase, "keepdir", "a.tmp"), "10"], [dirs.join(wbase, "drop.tmp"), "10"]]
-var rd = rules.delete_worker(bad, [wbase], null, wl.encode())
-eq("保留: 只删了未豁免项", _int(rd[0]), 1)
-eq("保留: 删除端 kept 计数", _int(rd[3]), 1)
+// ⚠ 文件名里已有 `rd`（第 95 行）与 `rd2`（第 102 行）—— 模块级**同名重复声明**
+//   现在是编译错误（旧行为是后者静默覆盖前者，容易掩盖两段测试互相串味 ✗）⇒ 这里用 rdKeep
+var rdKeep = rules.delete_worker(bad, [wbase], null, wl.encode())
+eq("保留: 只删了未豁免项", _int(rdKeep[0]), 1)
+eq("保留: 删除端 kept 计数", _int(rdKeep[3]), 1)
 check("保留: 豁免文件确实还在", dirs.stat(dirs.join(wbase, "keepdir", "a.tmp")).exists)
 check("保留: 未豁免文件确实没了", not dirs.stat(dirs.join(wbase, "drop.tmp")).exists)
 
